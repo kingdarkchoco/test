@@ -1,37 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alien Ship Game</title>
+  <meta charset="UTF-8">
+  <title>Alien Ship vs Rocks</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-    }
     canvas {
       display: block;
+      background-color: black;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-
+  <canvas id="game" width="1920" height="919"></canvas>
   <script>
-    const canvas = document.getElementById("gameCanvas");
+    const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // Load background image
-    const bg = new Image();
-    bg.src = "assets/background.jpg";  // Ensure this path is correct
-
-    // Load ship image
-    const shipImg = new Image();
-    shipImg.src = "assets/ship.png";  // Ensure this path is correct
+    let bg = new Image();
+    bg.src = "assets/background.jpg";
 
     let ship = {
       x: canvas.width / 2 - 25,
@@ -40,60 +26,81 @@
       height: 50
     };
 
-    function draw() {
-      if (bg.complete) {
-        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);  // Draw background image
-      } else {
-        // Fallback to starry sky if background image isn't loaded
-        drawStarrySky();
-      }
+    let rocks = [];
+    let lasers = [];
+    let score = 0;
 
-      // Draw ship image (use shipImg instead of the rectangle)
-      if (shipImg.complete) {
-        ctx.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);  // Draw the ship
-      } else {
-        // If the ship image hasn't loaded, draw a fallback rectangle
-        ctx.fillStyle = "lime";
-        ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
-      }
-
-      requestAnimationFrame(draw);
+    function drawShip() {
+      ctx.fillStyle = "lime";
+      ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
     }
 
-    // Draw a starry sky
-    function drawStarrySky() {
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);  // Black background
-
-      // Draw random white dots as stars
-      ctx.fillStyle = "white";
-      const starCount = 100;  // Number of stars
-      for (let i = 0; i < starCount; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = Math.random() * 2 + 1;  // Random size for each star
+    function drawRocks() {
+      ctx.fillStyle = "red";
+      rocks.forEach(rock => {
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);  // Draw each star as a small circle
+        ctx.arc(rock.x, rock.y, rock.radius, 0, Math.PI * 2);
         ctx.fill();
-      }
+      });
     }
 
-    bg.onload = () => {
-      draw();
-    };
+    function drawLasers() {
+      ctx.fillStyle = "yellow";
+      lasers.forEach(laser => {
+        ctx.fillRect(laser.x, laser.y, 5, 15);
+      });
+    }
 
-    bg.onerror = () => {
-      console.error("Error loading background image");
-      draw();  // Draw with fallback if image fails
-    };
+    function updateGame() {
+      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-    shipImg.onload = () => {
-      draw();
-    };
+      drawShip();
+      drawRocks();
+      drawLasers();
 
-    shipImg.onerror = () => {
-      console.error("Error loading ship image");
-    };
+      rocks.forEach(rock => rock.y += 2);
+      lasers.forEach(laser => laser.y -= 5);
+
+      // Collision
+      lasers.forEach((laser, lIndex) => {
+        rocks.forEach((rock, rIndex) => {
+          let dx = laser.x - rock.x;
+          let dy = laser.y - rock.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < rock.radius) {
+            rocks.splice(rIndex, 1);
+            lasers.splice(lIndex, 1);
+            score += 10;
+          }
+        });
+      });
+
+      requestAnimationFrame(updateGame);
+    }
+
+    function spawnRock() {
+      rocks.push({
+        x: Math.random() * canvas.width,
+        y: -20,
+        radius: 20 + Math.random() * 10
+      });
+    }
+
+    function shootLaser() {
+      lasers.push({
+        x: ship.x + ship.width / 2,
+        y: ship.y
+      });
+    }
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      ship.x = e.clientX - rect.left - ship.width / 2;
+    });
+
+    setInterval(spawnRock, 1000);
+    setInterval(shootLaser, 300);
+    bg.onload = updateGame;
   </script>
 </body>
 </html>
