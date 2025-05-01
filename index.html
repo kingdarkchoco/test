@@ -25,8 +25,13 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // Load background image
     const bg = new Image();
     bg.src = "assets/background.jpg";  // Ensure this path is correct
+
+    // Load ship image
+    const shipImg = new Image();
+    shipImg.src = "assets/ship.png";  // Ensure this path is correct
 
     let ship = {
       x: canvas.width / 2 - 25,
@@ -43,8 +48,14 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);  // Fallback if image isn't loaded
       }
 
-      ctx.fillStyle = "lime";
-      ctx.fillRect(ship.x, ship.y, ship.width, ship.height);  // Draw ship
+      // Draw ship image (use shipImg instead of the rectangle)
+      if (shipImg.complete) {
+        ctx.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);  // Draw the ship
+      } else {
+        // If the ship image hasn't loaded, draw a fallback rectangle
+        ctx.fillStyle = "lime";
+        ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+      }
 
       requestAnimationFrame(draw);
     }
@@ -55,6 +66,14 @@
 
     bg.onerror = () => {
       console.error("Error loading background image");
+    };
+
+    shipImg.onload = () => {
+      draw();
+    };
+
+    shipImg.onerror = () => {
+      console.error("Error loading ship image");
     };
   </script>
 </body>
