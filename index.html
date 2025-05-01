@@ -44,8 +44,8 @@
       if (bg.complete) {
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);  // Draw background image
       } else {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);  // Fallback if image isn't loaded
+        // Fallback to starry sky if background image isn't loaded
+        drawStarrySky();
       }
 
       // Draw ship image (use shipImg instead of the rectangle)
@@ -60,12 +60,31 @@
       requestAnimationFrame(draw);
     }
 
+    // Draw a starry sky
+    function drawStarrySky() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);  // Black background
+
+      // Draw random white dots as stars
+      ctx.fillStyle = "white";
+      const starCount = 100;  // Number of stars
+      for (let i = 0; i < starCount; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 2 + 1;  // Random size for each star
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);  // Draw each star as a small circle
+        ctx.fill();
+      }
+    }
+
     bg.onload = () => {
       draw();
     };
 
     bg.onerror = () => {
       console.error("Error loading background image");
+      draw();  // Draw with fallback if image fails
     };
 
     shipImg.onload = () => {
